@@ -7,11 +7,16 @@ export class Trader {
   repTable: number[][];
   inventory: Inventory;
 
-  constructor(name: string, level: number, repTable: number[][]) {
+  constructor(
+    name: string,
+    level: number,
+    repTable: number[][],
+    inventory: Inventory
+  ) {
     this.name = name;
     this.level = level; // get from database
     this.playerRep = 0; // get from database
     this.repTable = repTable;
-    this.inventory = new Inventory(); // get from database
+    this.inventory = inventory; // get from database
   }
 }
