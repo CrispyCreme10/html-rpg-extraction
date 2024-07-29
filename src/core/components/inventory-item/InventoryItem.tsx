@@ -1,22 +1,32 @@
 import { CSSProperties, useRef, useState } from "react";
 import { InventoryItem as Item } from "../../data/inventory-items/inventory-item";
 import { GRID_CELL_SIZE } from "../../constants/grid-cell";
-import { DragDropHandler } from "../../singletons/drag-drop";
 
 export type InventoryItemProps = {
   item: Item;
   x: number;
   y: number;
+  dragStartCallback: (
+    item: Item,
+    itemImgElement: HTMLImageElement,
+    itemFirstDragMoveFn: () => void,
+    itemDragEndFn: () => void
+  ) => void;
 };
 
-const InventoryItem = ({ item, x, y }: InventoryItemProps) => {
+const InventoryItem = ({
+  item,
+  x,
+  y,
+  dragStartCallback,
+}: InventoryItemProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const itemImgRef = useRef<HTMLImageElement>(null);
 
   const defaultInventoryItemClasses =
     "absolute flex justify-center items-center bg-blue-950 hover:bg-blue-900 border-2 border-white/30 text-white";
   const draggingInventoryItemClasses =
-    "absolute flex justify-center items-center";
+    "absolute flex justify-center items-center pointer-events-none";
 
   const inventoryItemStyles: CSSProperties = {
     width: `${GRID_CELL_SIZE * item.width}px`,
@@ -34,18 +44,30 @@ const InventoryItem = ({ item, x, y }: InventoryItemProps) => {
     fontSize: "0.55rem",
   };
 
+  const handleFirstDragMove = () => {
+    console.log("First drag move");
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    console.log("Drag end");
+    setIsDragging(false);
+  };
+
   const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
-    DragDropHandler.getInstance().dragStart(
+    dragStartCallback(
       item,
       itemImgRef.current!,
-      () => {
-        setIsDragging(true);
-      },
-      () => {
-        setIsDragging(false);
-      }
+      handleFirstDragMove,
+      handleDragEnd
     );
+  };
+
+  const handleMouseUp = () => {
+    console.log("Mouse up");
+
+    setIsDragging(false);
   };
 
   return (
@@ -55,6 +77,7 @@ const InventoryItem = ({ item, x, y }: InventoryItemProps) => {
         !isDragging ? defaultInventoryItemClasses : draggingInventoryItemClasses
       }
       onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
     >
       <img
         src={item.image}
