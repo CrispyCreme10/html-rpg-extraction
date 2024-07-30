@@ -14,8 +14,20 @@ export class Inventory {
     );
   }
 
-  getItem(id: number) {
+  getItem(id: number): InventoryItem | undefined {
     return this.items.find((item) => item.id === id);
+  }
+
+  getItemPos(id: number): { x: number; y: number } | null {
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        if (this.grid[y][x] === id) {
+          return { x, y };
+        }
+      }
+    }
+
+    return null;
   }
 
   canAddItemAtPos(
@@ -65,6 +77,21 @@ export class Inventory {
     return true;
   }
 
+  findFirstEmptySlot(
+    itemWidth: number,
+    itemHeight: number
+  ): { col: number; row: number } | null {
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        if (this.canAddItemAtPos(itemWidth, itemHeight, col, row)) {
+          return { col, row };
+        }
+      }
+    }
+
+    return null;
+  }
+
   addItem(item: InventoryItem, col: number, row: number) {
     if (!this.canAddItemAtPos(item.width, item.height, col, row)) {
       console.log("Can't add item");
@@ -81,16 +108,39 @@ export class Inventory {
     }
   }
 
-  moveItem(item: InventoryItem, col: number, row: number) {
+  moveItem(itemId: number, col: number, row: number) {
+    const item = this.getItem(itemId);
+    if (!item) {
+      return;
+    }
+
     if (!this.canAddItemAtPos(item.width, item.height, col, row)) {
       return;
     }
 
-    this.removeItem(item);
+    this.removeItem(itemId);
     this.addItem(item, col, row);
   }
 
-  removeItem(item: InventoryItem) {
+  removeItemQuantity(itemId: number, quantity: number) {
+    const item = this.getItem(itemId);
+    if (!item) {
+      return;
+    }
+
+    if (item.stack === quantity) {
+      this.removeItem(itemId);
+    } else if (item.stack > quantity) {
+      item.stack -= quantity;
+    }
+  }
+
+  removeItem(id: number) {
+    const item = this.getItem(id);
+    if (!item) {
+      return;
+    }
+
     const index = this.items.indexOf(item);
     if (index > -1) {
       this.items.splice(index, 1);

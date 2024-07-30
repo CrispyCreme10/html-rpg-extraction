@@ -86,7 +86,7 @@ export class DragDropHandler {
 
   tryMoveItem(): void {
     if (this.newItemPos !== null && this.draggedItem !== null) {
-      this.originalInventory?.removeItem(this.draggedItem);
+      this.originalInventory?.removeItem(this.draggedItem.id);
       this.targetInventory?.addItem(
         this.draggedItem,
         this.newItemPos.x,

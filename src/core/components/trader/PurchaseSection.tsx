@@ -3,13 +3,27 @@ import { InventoryItem } from "../../data/inventory-items/inventory-item";
 
 export type PurchaseSectionProps = {
   item: InventoryItem;
+  buyItemCallback: (itemId: number, quantity: number) => void;
+  sellItemCallback: (
+    itemId: number,
+    quantity: number,
+    sellPrice: number
+  ) => void;
 };
 
-const PurchaseSection = ({ item }: PurchaseSectionProps) => {
+const PurchaseSection = ({
+  item,
+  buyItemCallback,
+  sellItemCallback,
+}: PurchaseSectionProps) => {
   const [isBuyMode, setIsBuyMode] = useState(true);
 
   const handleClick = () => {
-    setIsBuyMode(!isBuyMode);
+    if (isBuyMode) {
+      buyItemCallback(item.id, 1);
+    } else {
+      sellItemCallback(item.id, 1, item.sellPrice);
+    }
   };
 
   return (
