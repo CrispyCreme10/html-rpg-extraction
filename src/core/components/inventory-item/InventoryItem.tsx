@@ -6,7 +6,8 @@ export type InventoryItemProps = {
   item: Item;
   x: number;
   y: number;
-  dragStartCallback: (
+  itemClickCallback?: (event: React.MouseEvent, item: Item) => void;
+  dragStartCallback?: (
     item: Item,
     itemImgElement: HTMLImageElement,
     itemFirstDragMoveFn: () => void,
@@ -18,6 +19,7 @@ const InventoryItem = ({
   item,
   x,
   y,
+  itemClickCallback,
   dragStartCallback,
 }: InventoryItemProps) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -55,6 +57,14 @@ const InventoryItem = ({
   };
 
   const handleMouseDown = (event: React.MouseEvent) => {
+    if (!dragStartCallback) {
+      return;
+    }
+
+    if (event.button !== 0) {
+      return;
+    }
+
     event.preventDefault();
     dragStartCallback(
       item,
@@ -70,6 +80,10 @@ const InventoryItem = ({
     setIsDragging(false);
   };
 
+  const handleClick = (event: React.MouseEvent) => {
+    itemClickCallback?.(event, item);
+  };
+
   return (
     <div
       style={inventoryItemStyles}
@@ -78,6 +92,7 @@ const InventoryItem = ({
       }
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onClick={handleClick}
     >
       <img
         src={item.image}

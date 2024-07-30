@@ -18,6 +18,10 @@ const PlayerInventory = ({
 }: PlayerInventoryProps) => {
   return (
     <div id="player-inventory">
+      <div id="header" className="flex gap-2 text-white">
+        <h1>Player Inventory</h1>
+        <h2 className="text-yellow-600">Gold: {player.gold}</h2>
+      </div>
       <GridContainer
         inventory={player.inventory}
         top={top}

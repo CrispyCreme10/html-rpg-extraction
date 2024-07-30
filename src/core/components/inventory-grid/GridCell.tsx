@@ -46,8 +46,6 @@ const GridCell = ({
   const triggerDragOverCallback = (e: React.MouseEvent) => {
     if (!DragDropHandler.getInstance().isDragging) return;
 
-    e.preventDefault();
-
     const cellX = e.clientX - e.currentTarget.getBoundingClientRect().left;
     const cellY = e.clientY - e.currentTarget.getBoundingClientRect().top;
 
@@ -83,7 +81,7 @@ const GridCell = ({
   return (
     <div
       style={gridCellStyles}
-      className="relative border-x border-y border-white/15 bg-zinc-900 hover:bg-zinc-800"
+      className="relative border-x border-y border-white/15 bg-zinc-900"
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
     ></div>

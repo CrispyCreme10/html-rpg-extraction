@@ -9,5 +9,7 @@ export const CreateCandleItem = () =>
     "https://png.pngtree.com/png-clipart/20240707/original/pngtree-glowing-candle-semi-flat-color-object-png-image_15513126.png",
     ItemCategory.MISC,
     4,
+    5,
+    10,
     5
   );

@@ -15,6 +15,7 @@ const CreateTestPlayerInventory = () => {
 export const testPlayer: Player = new Player(
   "testPlayer",
   1,
+  1_000,
   CreateTestPlayerInventory()
 );
 

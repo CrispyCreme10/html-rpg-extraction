@@ -7,6 +7,8 @@ export class InventoryItem {
   category: ItemCategory;
   width: number;
   height: number;
+  buyPrice: number;
+  sellPrice: number;
   stackable: boolean = false;
   maxStack: number = 1;
   stack: number;
@@ -20,6 +22,8 @@ export class InventoryItem {
     category: ItemCategory,
     width: number,
     height: number,
+    buyPrice: number,
+    sellPrice: number,
     stackable: boolean = false,
     maxStack: number = 1,
     stack: number = 1
@@ -32,6 +36,8 @@ export class InventoryItem {
     this.category = category;
     this.width = width;
     this.height = height;
+    this.buyPrice = buyPrice;
+    this.sellPrice = sellPrice;
     this.stackable = stackable;
     this.maxStack = maxStack;
     this.stack = stack;
