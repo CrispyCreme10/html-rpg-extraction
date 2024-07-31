@@ -1,4 +1,5 @@
 import { CSSProperties, useRef, useState } from "react";
+import { CSSProperties, useRef, useState } from "react";
 import GridCell from "./GridCell";
 import { Inventory } from "../../../data/inventories/inventory";
 import InventoryItem from "../inventory-item/InventoryItem";
@@ -9,10 +10,13 @@ export type GridContainerProps = {
   inventory: Inventory;
   itemsDraggable?: boolean;
   itemsSelectable?: boolean;
+  itemsDraggable?: boolean;
+  itemsSelectable?: boolean;
   top?: number;
   left?: number;
   bottom?: number;
   right?: number;
+  itemSelectedCallback?: (item: Item) => void;
   itemSelectedCallback?: (item: Item) => void;
 };
 
@@ -29,20 +33,27 @@ const GridContainer = ({
   inventory,
   itemsDraggable = true,
   itemsSelectable = true,
+  itemsDraggable = true,
+  itemsSelectable = true,
   top = 0,
   left = 0,
   bottom = 0,
   right = 0,
+  itemSelectedCallback,
   itemSelectedCallback,
 }: GridContainerProps) => {
   const [dragOverCells, setDragOverCells] = useState<[number, number][]>([]);
   const [dragValidityColor, setDragValidityColor] =
     useState<DragValidityColor>("");
   const gridContainerRef = useRef<HTMLDivElement>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
 
   const rows = inventory.rows;
   const cols = inventory.cols;
   const grid = inventory.grid;
+
+  // const DRAG_AUTO_SCROLL_SPEED = 50;
+  // const DRAG_AUTO_SCROLL_TIMEOUT = 100;
 
   // const DRAG_AUTO_SCROLL_SPEED = 50;
   // const DRAG_AUTO_SCROLL_TIMEOUT = 100;
@@ -57,6 +68,10 @@ const GridContainer = ({
   const gridCellElementStyles: CSSProperties = {
     gridTemplateRows: `repeat(${rows}, 1fr)`,
     gridTemplateColumns: `repeat(${cols}, 1fr)`,
+  };
+
+  const handleGridContainerDragEnd = () => {
+    setDragOverCells([]);
   };
 
   const handleGridContainerDragEnd = () => {
@@ -78,6 +93,7 @@ const GridContainer = ({
       },
       () => {
         itemDragEndFn();
+        handleGridContainerDragEnd();
         handleGridContainerDragEnd();
       }
     );
@@ -116,6 +132,10 @@ const GridContainer = ({
     if (canAddItem) {
       // not useful when an internal drag is happening
       // but useful when dragging from another inventory
+      DragDropHandler.getInstance().setTargetInventory(
+        inventory,
+        handleGridContainerDragEnd
+      );
       DragDropHandler.getInstance().setTargetInventory(
         inventory,
         handleGridContainerDragEnd
@@ -173,6 +193,8 @@ const GridContainer = ({
             y={y}
             itemClickCallback={onItemClick}
             dragStartCallback={itemsDraggable ? handleDragStart : undefined}
+            itemClickCallback={onItemClick}
+            dragStartCallback={itemsDraggable ? handleDragStart : undefined}
           />
         );
       }
@@ -188,9 +210,11 @@ const GridContainer = ({
     <div
       id="grid-container"
       ref={gridContainerRef}
+      ref={gridContainerRef}
       style={gridContainerStyles}
       className="relative h-full w-fit overflow-x-hidden overflow-y-auto"
       onMouseLeave={handleMouseLeave}
+      // onMouseMove={handleMouseMove}
       // onMouseMove={handleMouseMove}
     >
       <div

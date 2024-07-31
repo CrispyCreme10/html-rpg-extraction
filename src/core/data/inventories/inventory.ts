@@ -39,6 +39,18 @@ export class Inventory {
     return null;
   }
 
+  getItemPos(id: number): { x: number; y: number } | null {
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        if (this.grid[y][x] === id) {
+          return { x, y };
+        }
+      }
+    }
+
+    return null;
+  }
+
   canAddItemAtPos(
     itemWidth: number,
     itemHeight: number,
@@ -99,6 +111,21 @@ export class Inventory {
     return null;
   }
 
+  findFirstEmptySlot(
+    itemWidth: number,
+    itemHeight: number
+  ): { col: number; row: number } | null {
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        if (this.canAddItemAtPos(itemWidth, itemHeight, col, row)) {
+          return { col, row };
+        }
+      }
+    }
+
+    return null;
+  }
+
   addItem(item: InventoryItem, col: number, row: number) {
     if (!this.canAddItemAtPos(item.width, item.height, col, row)) {
       console.log("Can't add item");
@@ -125,6 +152,7 @@ export class Inventory {
       return;
     }
 
+    this.removeItem(itemId);
     this.removeItem(itemId);
     this.addItem(item, col, row);
   }

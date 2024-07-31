@@ -26,6 +26,7 @@ export class Trader {
     itemPrices: Map<string, TraderItem>
   ) {
     this.id = id;
+    this.id = id;
     this.name = name;
     this.level = level; // get from database
     this.playerRep = 0; // get from database
