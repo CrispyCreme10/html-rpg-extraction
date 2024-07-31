@@ -1,13 +1,18 @@
+import { immerable } from "immer";
 import { Inventory } from "../inventories/inventory";
 
 export class Player {
+  [immerable] = true;
+
   name: string;
   level: number;
+  gold: number;
   inventory: Inventory;
 
-  constructor(name: string, level: number, inventory: Inventory) {
-    this.name = name;
-    this.level = level;
-    this.inventory = inventory;
+  constructor(name: string, level: number, gold: number, inventory: Inventory) {
+    this.name = name; // get from database
+    this.level = level; // get from database
+    this.gold = gold; // get from database
+    this.inventory = inventory; // get from database
   }
 }

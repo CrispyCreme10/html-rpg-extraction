@@ -1,5 +1,5 @@
 import { Inventory } from "../data/inventories/inventory";
-import { InventoryItem } from "../data/inventory-items/inventory-item";
+import { InventoryItem } from "../data/items/item";
 
 export class DragDropHandler {
   private static instance: DragDropHandler;
@@ -27,6 +27,9 @@ export class DragDropHandler {
   handleMouseUp: () => void = () => {};
   handleMouseMove: (event: MouseEvent) => void = () => {};
 
+  // callbacks
+  targetInventoryDragEndCallback: () => void = () => {};
+
   dragStart(
     item: InventoryItem,
     originalInventory: Inventory,
@@ -37,7 +40,7 @@ export class DragDropHandler {
     // initialize
     this.setDraggedItem(item);
     this.setOriginalInventory(originalInventory);
-    this.setTargetInventory(originalInventory);
+    this.setTargetInventory(originalInventory, () => {});
 
     // add item to img element and append to body
     const dragImg = this.initializeDragImage(itemImgElement);
@@ -49,6 +52,7 @@ export class DragDropHandler {
       dragImg.remove();
       this.dragEnd();
       dragEndCallback();
+      this.targetInventoryDragEndCallback();
     };
 
     document.addEventListener("mouseup", this.handleMouseUp);
@@ -82,7 +86,7 @@ export class DragDropHandler {
 
   tryMoveItem(): void {
     if (this.newItemPos !== null && this.draggedItem !== null) {
-      this.originalInventory?.removeItem(this.draggedItem);
+      this.originalInventory?.removeItem(this.draggedItem.id);
       this.targetInventory?.addItem(
         this.draggedItem,
         this.newItemPos.x,
@@ -107,8 +111,9 @@ export class DragDropHandler {
     this.originalInventory = inventory;
   }
 
-  setTargetInventory(inventory: Inventory) {
+  setTargetInventory(inventory: Inventory, dragEndCallback: () => void) {
     this.targetInventory = inventory;
+    this.targetInventoryDragEndCallback = dragEndCallback;
   }
 
   getDraggedItem() {

@@ -1,16 +1,19 @@
-import { CSSProperties, useState } from "react";
+import { CSSProperties, useRef, useState } from "react";
 import GridCell from "./GridCell";
-import { Inventory } from "../../data/inventories/inventory";
+import { Inventory } from "../../../data/inventories/inventory";
 import InventoryItem from "../inventory-item/InventoryItem";
-import { DragDropHandler } from "../../singletons/drag-drop";
-import { InventoryItem as Item } from "../../data/inventory-items/inventory-item";
+import { DragDropHandler } from "../../../singletons/drag-drop";
+import { InventoryItem as Item } from "../../../data/items/item";
 
 export type GridContainerProps = {
   inventory: Inventory;
+  itemsDraggable?: boolean;
+  itemsSelectable?: boolean;
   top?: number;
   left?: number;
   bottom?: number;
   right?: number;
+  itemSelectedCallback?: (item: Item) => void;
 };
 
 export type DragOverType = (
@@ -24,18 +27,25 @@ export type DragValidityColor = "valid" | "invalid" | "";
 
 const GridContainer = ({
   inventory,
+  itemsDraggable = true,
+  itemsSelectable = true,
   top = 0,
   left = 0,
   bottom = 0,
   right = 0,
+  itemSelectedCallback,
 }: GridContainerProps) => {
   const [dragOverCells, setDragOverCells] = useState<[number, number][]>([]);
   const [dragValidityColor, setDragValidityColor] =
     useState<DragValidityColor>("");
+  const gridContainerRef = useRef<HTMLDivElement>(null);
 
   const rows = inventory.rows;
   const cols = inventory.cols;
   const grid = inventory.grid;
+
+  // const DRAG_AUTO_SCROLL_SPEED = 50;
+  // const DRAG_AUTO_SCROLL_TIMEOUT = 100;
 
   const gridContainerStyles: CSSProperties = {
     top: top ? `${top}px` : "",
@@ -47,6 +57,10 @@ const GridContainer = ({
   const gridCellElementStyles: CSSProperties = {
     gridTemplateRows: `repeat(${rows}, 1fr)`,
     gridTemplateColumns: `repeat(${cols}, 1fr)`,
+  };
+
+  const handleGridContainerDragEnd = () => {
+    setDragOverCells([]);
   };
 
   const handleDragStart = (
@@ -64,7 +78,7 @@ const GridContainer = ({
       },
       () => {
         itemDragEndFn();
-        setDragOverCells([]);
+        handleGridContainerDragEnd();
       }
     );
   };
@@ -102,7 +116,10 @@ const GridContainer = ({
     if (canAddItem) {
       // not useful when an internal drag is happening
       // but useful when dragging from another inventory
-      DragDropHandler.getInstance().setTargetInventory(inventory);
+      DragDropHandler.getInstance().setTargetInventory(
+        inventory,
+        handleGridContainerDragEnd
+      );
       DragDropHandler.getInstance().setNewItemPos(xAdjust, yAdjust);
     } else {
       DragDropHandler.getInstance().setNewItemPos(-1, -1);
@@ -118,9 +135,18 @@ const GridContainer = ({
     setDragOverCells(cells);
   };
 
+  const onItemClick = (event: React.MouseEvent, item: Item) => {
+    if (event.button === 0) {
+      if (itemsSelectable && itemSelectedCallback) {
+        itemSelectedCallback(item);
+      }
+    } else if (event.button === 2) {
+      console.log("Item right clicked", item);
+    }
+  };
+
   const gridCellElements: JSX.Element[] = [];
   const itemImageElements: JSX.Element[] = [];
-  const placedItems: number[] = [];
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       const isItemOverCell = dragOverCells.some(
@@ -139,19 +165,16 @@ const GridContainer = ({
       const itemId = grid[y][x];
       const item = inventory.getItem(itemId);
       if (item) {
-        if (placedItems.includes(itemId)) {
-          continue;
-        }
         itemImageElements.push(
           <InventoryItem
-            key={itemId}
+            key={item.id}
             item={item}
             x={x}
             y={y}
-            dragStartCallback={handleDragStart}
+            itemClickCallback={onItemClick}
+            dragStartCallback={itemsDraggable ? handleDragStart : undefined}
           />
         );
-        placedItems.push(itemId);
       }
     }
   }
@@ -164,9 +187,11 @@ const GridContainer = ({
   return (
     <div
       id="grid-container"
+      ref={gridContainerRef}
       style={gridContainerStyles}
-      className="absolute"
+      className="relative h-full w-fit overflow-x-hidden overflow-y-auto"
       onMouseLeave={handleMouseLeave}
+      // onMouseMove={handleMouseMove}
     >
       <div
         id="grid-cell-elements"
@@ -175,7 +200,9 @@ const GridContainer = ({
       >
         {gridCellElements}
       </div>
-      <div id="inventory-item-elements">{itemImageElements}</div>
+      <div id="inventory-item-elements" className="absolute top-0 left-0">
+        {itemImageElements}
+      </div>
     </div>
   );
 };

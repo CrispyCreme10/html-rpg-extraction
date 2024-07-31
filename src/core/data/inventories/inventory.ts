@@ -1,21 +1,42 @@
-import { InventoryItem } from "../inventory-items/inventory-item";
+import { immerable, produce } from "immer";
+import { InventoryItem } from "../items/item";
+
+const EMPTY_SLOT_VALUE = "";
 
 export class Inventory {
+  [immerable] = true;
+
   id: string;
   items: InventoryItem[];
-  grid: number[][];
+  grid: string[][];
   private canAddCache = new Map<string, boolean>();
 
   constructor(id: string, public rows: number, public cols: number) {
     this.id = id;
     this.items = [];
     this.grid = Array.from({ length: rows }, () =>
-      Array.from({ length: cols }, () => 0)
+      Array.from({ length: cols }, () => EMPTY_SLOT_VALUE)
     );
   }
 
-  getItem(id: number) {
-    return this.items.find((item) => item.id === id);
+  itemExists(itemId: string) {
+    return this.items.some((item) => item.id === itemId);
+  }
+
+  getItem(itemId: string): InventoryItem | undefined {
+    return this.items.find((item) => item.id === itemId);
+  }
+
+  getItemPos(itemId: string): { x: number; y: number } | null {
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        if (this.grid[y][x] === itemId) {
+          return { x, y };
+        }
+      }
+    }
+
+    return null;
   }
 
   canAddItemAtPos(
@@ -24,8 +45,6 @@ export class Inventory {
     col: number,
     row: number
   ) {
-    console.log("Checking if item can be added at position", col, row);
-
     // Check if item is in bounds
     if (
       col + itemWidth > this.cols ||
@@ -47,7 +66,7 @@ export class Inventory {
     // Check if item can be added
     for (let y = row; y < row + itemHeight; y++) {
       for (let x = col; x < col + itemWidth; x++) {
-        if (this.grid[y][x] !== 0) {
+        if (this.grid[y][x] !== EMPTY_SLOT_VALUE) {
           console.log(
             "Can't add item at position",
             itemWidth,
@@ -63,6 +82,21 @@ export class Inventory {
     }
 
     return true;
+  }
+
+  findFirstEmptySlot(
+    itemWidth: number,
+    itemHeight: number
+  ): { col: number; row: number } | null {
+    for (let row = 0; row < this.rows; row++) {
+      for (let col = 0; col < this.cols; col++) {
+        if (this.canAddItemAtPos(itemWidth, itemHeight, col, row)) {
+          return { col, row };
+        }
+      }
+    }
+
+    return null;
   }
 
   addItem(item: InventoryItem, col: number, row: number) {
@@ -81,23 +115,49 @@ export class Inventory {
     }
   }
 
-  moveItem(item: InventoryItem, col: number, row: number) {
+  moveItem(itemId: string, col: number, row: number) {
+    const item = this.getItem(itemId);
+    if (!item) {
+      return;
+    }
+
     if (!this.canAddItemAtPos(item.width, item.height, col, row)) {
       return;
     }
 
-    this.removeItem(item);
+    this.removeItem(itemId);
     this.addItem(item, col, row);
   }
 
-  removeItem(item: InventoryItem) {
+  removeItemQuantity(itemId: string, quantity: number) {
+    const item = this.getItem(itemId);
+    if (!item) {
+      return;
+    }
+
+    if (item.stack === quantity) {
+      this.removeItem(itemId);
+    } else if (item.stack > quantity) {
+      const newItem = produce(item, (draftItem) => {
+        draftItem.stack -= quantity;
+      });
+      this.items.splice(this.items.indexOf(item), 1, newItem);
+    }
+  }
+
+  removeItem(itemId: string) {
+    const item = this.getItem(itemId);
+    if (!item) {
+      return;
+    }
+
     const index = this.items.indexOf(item);
     if (index > -1) {
       this.items.splice(index, 1);
       for (let y = 0; y < this.rows; y++) {
         for (let x = 0; x < this.cols; x++) {
           if (this.grid[y][x] === item.id) {
-            this.grid[y][x] = 0;
+            this.grid[y][x] = EMPTY_SLOT_VALUE;
             const cacheKey = this.getCacheKey(item.width, item.height, x, y);
             this.removeFromCache(cacheKey);
           }
@@ -125,9 +185,5 @@ export class Inventory {
 
   private removeFromCache(key: string) {
     this.canAddCache.delete(key);
-  }
-
-  private clearCache() {
-    this.canAddCache.clear();
   }
 }
